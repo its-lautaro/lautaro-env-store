@@ -19,7 +19,7 @@ git clone https://github.com/its-lautaro/lautaro-env-store.git
 cd lautaro-env-store && ./install.sh
 ```
 
-Se instala en `~/.local/bin`. Si esa carpeta no está en tu `PATH`, agregá a tu `~/.zshrc`:
+El código queda en `~/.local/lib/lautaro-env-store` y un link en `~/.local/bin/lautaro-env-store`. Si esa carpeta no está en tu `PATH`, agregá a tu `~/.zshrc`:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
@@ -67,6 +67,17 @@ Borrar del store no afecta la terminal ya abierta: la salida te deja el `unset` 
 El instalador corre `lautaro-env-store --init`, que crea el store vacío y agrega el `source` al rc del shell, así cualquier terminal (o herramienta que cargue tu `~/.zshrc`) ya ve las variables apenas las guardás.
 
 Para usar otro archivo: `LAUTARO_ENV_FILE=/ruta/otro.env lautaro-env-store ...`.
+
+## Estructura
+
+```
+bin/lautaro-env-store        # launcher
+lautaro_env_store/
+  main.py                    # despacha al comando según el primer argumento
+  config.py                  # rutas, regexes y texto de uso
+  commands/                  # un archivo por comando: save, list, remove, clear, init
+  *.py                       # una función por archivo (parse, store, remove, read_entries, ...)
+```
 
 ## Licencia
 
