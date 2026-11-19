@@ -10,27 +10,27 @@ import (
 // EnsureSourced agrega la línea source al primer rc que exista. Devuelve rc vacío si no existe ninguno.
 func EnsureSourced(rcFiles []string, storePath, marker string) (rc string, added bool, err error) {
 	line := sourceLine(storePath, marker)
-	for _, rc := range rcFiles {
-		data, err := os.ReadFile(rc)
+	for _, candidate := range rcFiles {
+		data, err := os.ReadFile(candidate)
 		if errors.Is(err, os.ErrNotExist) {
 			continue
 		}
 		if err != nil {
-			return rc, false, fmt.Errorf("no pude leer %s: %w", rc, err)
+			return candidate, false, fmt.Errorf("no pude leer %s: %w", candidate, err)
 		}
 		if strings.Contains(string(data), line) {
-			return rc, false, nil
+			return candidate, false, nil
 		}
-		f, err := os.OpenFile(rc, os.O_APPEND|os.O_WRONLY, 0o644)
+		f, err := os.OpenFile(candidate, os.O_APPEND|os.O_WRONLY, 0o644)
 		if err != nil {
-			return rc, false, fmt.Errorf("no pude escribir %s: %w", rc, err)
+			return candidate, false, fmt.Errorf("no pude escribir %s: %w", candidate, err)
 		}
-		defer f.Close()
 		block := fmt.Sprintf("\n# %s: variables guardadas con `%s`\n%s\n", marker, marker, line)
-		if _, err := f.WriteString(block); err != nil {
-			return rc, false, fmt.Errorf("no pude escribir %s: %w", rc, err)
+		_, writeErr := f.WriteString(block)
+		if err := errors.Join(writeErr, f.Close()); err != nil {
+			return candidate, false, fmt.Errorf("no pude escribir %s: %w", candidate, err)
 		}
-		return rc, true, nil
+		return candidate, true, nil
 	}
 	return "", false, nil
 }

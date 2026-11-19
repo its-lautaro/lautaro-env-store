@@ -20,8 +20,8 @@ func (a App) helpText() string {
 	w(color.Bold("Ejemplos:"))
 	w("  " + bin + " " + color.Cyan("API_USER") + "=usuario")
 	w("  " + bin + " " + color.Cyan("API_USER") + "=usuario " + color.Cyan("API_PASSWORD") + "=secreto")
-	example := `API_USER="Un Usuario"`
-	w("  " + bin + " " + color.Cyan("API_USER") + example[len("API_USER"):] + pad(Name+" "+example) + color.Dim("# espacios o símbolos: comillas del shell"))
+	example := `="Un Usuario"`
+	w("  " + bin + " " + color.Cyan("API_USER") + example + pad(Name+" API_USER"+example) + color.Dim("# espacios o símbolos: comillas del shell"))
 	w("")
 	w(color.Bold("Comandos:"))
 	for _, c := range a.Commands() {
@@ -30,7 +30,7 @@ func (a App) helpText() string {
 	w("")
 	w(color.Bold("Notas:"))
 	w(color.Dim("  Los nombres de las variables guardadas se copian al clipboard; los valores nunca se imprimen."))
-	w(color.Dim("  El store se crea con permisos 600 y ~/.zshrc (o ~/.bashrc) lo carga en cada terminal nueva."))
-	w(color.Dim("  LAUTARO_ENV_FILE cambia la ruta del store."))
+	w(color.Dim("  El store se crea con permisos 600 y " + strings.Join(a.RCFiles, " o ") + " lo carga en cada terminal nueva."))
+	w(color.Dim("  " + StoreEnvVar + " cambia la ruta del store."))
 	return strings.TrimRight(b.String(), "\n")
 }

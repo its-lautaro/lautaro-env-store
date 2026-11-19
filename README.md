@@ -35,7 +35,7 @@ Comandos:
 
 Notas:
   Los nombres de las variables guardadas se copian al clipboard; los valores nunca se imprimen.
-  El store se crea con permisos 600 y ~/.zshrc (o ~/.bashrc) lo carga en cada terminal nueva.
+  El store se crea con permisos 600 y /Users/vos/.zshrc o /Users/vos/.bashrc lo carga en cada terminal nueva.
   LAUTARO_ENV_FILE cambia la ruta del store.
 ```
 

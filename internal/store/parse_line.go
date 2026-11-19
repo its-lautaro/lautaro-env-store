@@ -4,7 +4,7 @@ import "regexp"
 
 var (
 	entryRE = regexp.MustCompile(`^export\s+(` + namePattern + `)=`)
-	savedRE = regexp.MustCompile(regexp.QuoteMeta(savedMarker) + `(\d{4}-\d{2}-\d{2} \d{2}:\d{2})$`)
+	savedRE = regexp.MustCompile(regexp.QuoteMeta(savedMarker) + `(.+)$`)
 )
 
 func parseLine(line string) (Entry, bool) {

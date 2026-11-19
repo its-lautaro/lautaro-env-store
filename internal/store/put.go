@@ -3,6 +3,11 @@ package store
 import "time"
 
 func (s Store) Put(vars []Var) (replaced map[string]bool, err error) {
+	for _, v := range vars {
+		if err := validName(v.Name); err != nil {
+			return nil, err
+		}
+	}
 	lines, err := s.readLines()
 	if err != nil {
 		return nil, err
