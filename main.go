@@ -5,10 +5,11 @@ import (
 	"os"
 
 	"github.com/its-lautaro/lautaro-env-store/internal/commands"
-	"github.com/its-lautaro/lautaro-env-store/internal/env"
 )
 
 var subcommands = map[string]func([]string){
+	"-h":       commands.Help,
+	"--help":   commands.Help,
 	"--list":   commands.List,
 	"ls":       commands.List,
 	"--remove": commands.Remove,
@@ -19,9 +20,6 @@ var subcommands = map[string]func([]string){
 
 func main() {
 	args := os.Args[1:]
-	if len(args) > 0 && (args[0] == "-h" || args[0] == "--help") {
-		env.Usage(0)
-	}
 	if len(args) > 0 {
 		if run, ok := subcommands[args[0]]; ok {
 			run(args[1:])
