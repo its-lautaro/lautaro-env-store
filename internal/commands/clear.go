@@ -3,7 +3,6 @@ package commands
 import (
 	"bufio"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/its-lautaro/lautaro-env-store/internal/color"
@@ -22,16 +21,16 @@ func (a App) Clear(args []string) error {
 		return err
 	}
 	if len(entries) == 0 {
-		fmt.Println("📭 No había nada que borrar")
+		fmt.Fprintln(a.Out, "📭 No había nada que borrar")
 		return nil
 	}
 	if !skipConfirm {
-		fmt.Print(color.Yellow(fmt.Sprintf("⚠️  Vas a borrar %d variable(s) de %s. ¿Seguro? [y/N] ", len(entries), a.Store.Path)))
-		answer, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+		fmt.Fprint(a.Out, color.Yellow(fmt.Sprintf("⚠️  Vas a borrar %d variable(s) de %s. ¿Seguro? [y/N] ", len(entries), a.Store.Path)))
+		answer, _ := bufio.NewReader(a.In).ReadString('\n')
 		switch strings.ToLower(strings.TrimSpace(answer)) {
 		case "y", "yes", "s", "si", "sí":
 		default:
-			fmt.Println("👌 Cancelado")
+			fmt.Fprintln(a.Out, "👌 Cancelado")
 			return nil
 		}
 	}
@@ -42,6 +41,6 @@ func (a App) Clear(args []string) error {
 	for i, e := range entries {
 		names[i] = e.Name
 	}
-	fmt.Println("🧹 Store vacío. " + unsetHint(names))
+	fmt.Fprintln(a.Out, "🧹 Store vacío. "+unsetHint(names))
 	return nil
 }
