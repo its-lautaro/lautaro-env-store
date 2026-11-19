@@ -29,19 +29,23 @@ Requiere Python 3.8+ (el de macOS alcanza) y `pbcopy` (macOS) o `xclip` / `xsel`
 
 ## Uso
 
-Varias variables (la lista va entre comillas simples para que el shell no interprete los paréntesis):
+Una variable, como `nombre valor`:
 
 ```bash
-lautaro-env-store '[("API_USER","usuario"),("API_PASSWORD","secreto")]'
+lautaro-env-store API_USER usuario
 ```
 
-Una sola variable, en cualquiera de estas formas:
+Una o varias, como `NOMBRE=valor`:
 
 ```bash
-lautaro-env-store "API_USER","usuario"
-lautaro-env-store '("API_USER","usuario")'
-lautaro-env-store API_USER usuario
 lautaro-env-store API_USER=usuario API_PASSWORD=secreto
+```
+
+Si el valor tiene espacios o caracteres especiales, usá las comillas del shell. Se guardan sin las comillas:
+
+```bash
+lautaro-env-store API_USER="Un Usuario"
+echo "$API_USER"   # Un Usuario
 ```
 
 Salida:

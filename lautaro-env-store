@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
 """lautaro-env-store: guarda variables de entorno en ~/.lautaro-env y las deja listas para el shell.
 
-Formatos aceptados (todos equivalentes):
-  lautaro-env-store '[("user","valor"),("password","valor")]'   # varias
-  lautaro-env-store '("user","valor")'                           # una
-  lautaro-env-store "user","valor"                               # una (el shell pasa: user,valor)
-  lautaro-env-store user=valor password=valor                    # varias, estilo KEY=VALUE
-  lautaro-env-store user valor                                   # una, dos argumentos
-  lautaro-env-store --init                                       # solo crea el store y el source en el rc
+Formatos aceptados:
+  lautaro-env-store API_USER usuario                          # una: nombre valor
+  lautaro-env-store API_USER=usuario API_PASSWORD=secreto     # una o varias: NOMBRE=valor
+  lautaro-env-store API_USER="Un Usuario"                     # valores con espacios: comillas del shell
+  lautaro-env-store --init                                    # solo crea el store y el source en el rc
 
 Mantenimiento:
   lautaro-env-store --list                     # nombres guardados y fecha (nunca los valores)
-  lautaro-env-store --remove user password     # borra esas variables
+  lautaro-env-store --remove API_USER          # borra esas variables
   lautaro-env-store --clear [--yes]            # borra todas
 """
-import ast
 import datetime as dt
 import os
 import re
@@ -37,40 +34,13 @@ def usage(code=1):
 
 
 def parse(args):
-    """Devuelve una lista de (nombre, valor) a partir de los argumentos de la línea de comandos."""
+    """Devuelve una lista de (nombre, valor): `NOMBRE valor` o uno o más `NOMBRE=valor`."""
     if not args:
         usage()
-    joined = " ".join(args).strip()
-
-    # 1) Literal Python: [("a","1"),("b","2")]  |  ("a","1")  |  "a","1"
-    try:
-        value = ast.literal_eval(joined)
-    except (ValueError, SyntaxError):
-        value = None
-    if isinstance(value, (list, tuple)):
-        if len(value) == 2 and all(isinstance(x, str) for x in value):
-            return [(value[0], value[1])]
-        pairs = []
-        for item in value:
-            if not (isinstance(item, (list, tuple)) and len(item) == 2 and all(isinstance(x, str) for x in item)):
-                fail(f"no entiendo el par {item!r}; esperaba (\"nombre\", \"valor\")")
-            pairs.append((item[0], item[1]))
-        if pairs:
-            return pairs
-
-    # 2) KEY=VALUE KEY2=VALUE2
     if all("=" in a for a in args):
         return [tuple(a.split("=", 1)) for a in args]
-
-    # 3) dos argumentos sueltos: nombre valor
     if len(args) == 2:
         return [(args[0], args[1])]
-
-    # 4) un argumento "nombre,valor" (el shell ya le sacó las comillas)
-    if len(args) == 1 and "," in args[0]:
-        name, value = args[0].split(",", 1)
-        return [(name.strip().strip("'\""), value.strip().strip("'\""))]
-
     fail(f"no pude interpretar los argumentos: {args!r}")
 
 
