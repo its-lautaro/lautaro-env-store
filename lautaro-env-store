@@ -183,16 +183,15 @@ def main():
     copied = copy_to_clipboard(" ".join(names))
 
     plural = "s" if len(names) > 1 else ""
-    print(f"🔐 Variable{plural} guardada{plural} en {STORE}:")
+    print(f"🔐 Variable{plural} guardada{plural}:")
     for name in names:
         print(f"   {'♻️  ' + name + ' (reemplazada)' if name in replaced else '✅ ' + name}")
     if copied:
-        print(f"📋 Nombre{plural} copiado{plural} al clipboard: {' '.join(names)}")
+        print(f"📋 Nombre{plural} copiado{plural} al clipboard")
     else:
         print("⚠️  No encontré un comando de clipboard (pbcopy/xclip/wl-copy); los nombres quedan arriba.")
     if added:
         print(f"🧩 Agregué el source de {STORE} a {rc}")
-    print(f"🚀 Para usarla{plural} en esta terminal: source {STORE}  (las nuevas terminales ya las cargan solas)")
 
 
 if __name__ == "__main__":

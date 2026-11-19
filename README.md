@@ -46,11 +46,10 @@ echo "$API_USER"   # Un Usuario
 Salida:
 
 ```
-🔐 Variables guardadas en /Users/vos/.lautaro-env:
+🔐 Variables guardadas:
    ✅ API_USER
    ✅ API_PASSWORD
-📋 Nombres copiados al clipboard: API_USER API_PASSWORD
-🚀 Para usarlas en esta terminal: source /Users/vos/.lautaro-env  (las nuevas terminales ya las cargan solas)
+📋 Nombres copiados al clipboard
 ```
 
 Si la variable ya existía, se reemplaza su valor y la salida lo marca con ♻️. Los valores nunca se imprimen ni se copian al clipboard, solo los nombres.
