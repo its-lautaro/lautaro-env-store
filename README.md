@@ -19,13 +19,19 @@ git clone https://github.com/its-lautaro/lautaro-env-store.git
 cd lautaro-env-store && ./install.sh
 ```
 
-El código queda en `~/.local/lib/lautaro-env-store` y un link en `~/.local/bin/lautaro-env-store`. Si esa carpeta no está en tu `PATH`, agregá a tu `~/.zshrc`:
+O directamente con Go:
+
+```bash
+GOBIN="$HOME/.local/bin" go install github.com/its-lautaro/lautaro-env-store@latest && lautaro-env-store --init
+```
+
+El binario queda en `~/.local/bin`. Si esa carpeta no está en tu `PATH`, agregá a tu `~/.zshrc`:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-Requiere Python 3.8+ (el de macOS alcanza) y `pbcopy` (macOS) o `xclip` / `xsel` / `wl-copy` (Linux) para el clipboard.
+Requiere Go 1.22+ para compilar y `pbcopy` (macOS) o `xclip` / `xsel` / `wl-copy` (Linux) para el clipboard.
 
 ## Uso
 
@@ -71,12 +77,14 @@ Para usar otro archivo: `LAUTARO_ENV_FILE=/ruta/otro.env lautaro-env-store ...`.
 ## Estructura
 
 ```
-bin/lautaro-env-store        # launcher
-lautaro_env_store/
-  main.py                    # despacha al comando según el primer argumento
-  config.py                  # rutas, regexes y texto de uso
-  commands/                  # un archivo por comando: save, list, remove, clear, init
-  *.py                       # una función por archivo (parse, store, remove, read_entries, ...)
+main.go                      # despacha al comando según el primer argumento
+internal/commands/           # un archivo por comando: save, list, remove, clear, init
+internal/env/                # una función por archivo: config, parse, save, remove,
+                             # read_entries, write_lines, ensure_sourced, copy_to_clipboard, ...
+```
+
+```bash
+go build -o lautaro-env-store .
 ```
 
 ## Licencia
