@@ -29,15 +29,10 @@ Requiere Python 3.8+ (el de macOS alcanza) y `pbcopy` (macOS) o `xclip` / `xsel`
 
 ## Uso
 
-Una variable, como `nombre valor`:
+Cada argumento es `NOMBRE=valor`, una o varias:
 
 ```bash
-lautaro-env-store API_USER usuario
-```
-
-Una o varias, como `NOMBRE=valor`:
-
-```bash
+lautaro-env-store API_USER=usuario
 lautaro-env-store API_USER=usuario API_PASSWORD=secreto
 ```
 

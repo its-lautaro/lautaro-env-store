@@ -2,8 +2,8 @@
 """lautaro-env-store: guarda variables de entorno en ~/.lautaro-env y las deja listas para el shell.
 
 Formatos aceptados:
-  lautaro-env-store API_USER usuario                          # una: nombre valor
-  lautaro-env-store API_USER=usuario API_PASSWORD=secreto     # una o varias: NOMBRE=valor
+  lautaro-env-store API_USER=usuario                          # una
+  lautaro-env-store API_USER=usuario API_PASSWORD=secreto     # varias
   lautaro-env-store API_USER="Un Usuario"                     # valores con espacios: comillas del shell
   lautaro-env-store --init                                    # solo crea el store y el source en el rc
 
@@ -34,14 +34,13 @@ def usage(code=1):
 
 
 def parse(args):
-    """Devuelve una lista de (nombre, valor): `NOMBRE valor` o uno o más `NOMBRE=valor`."""
+    """Devuelve una lista de (nombre, valor) a partir de argumentos NOMBRE=valor."""
     if not args:
         usage()
-    if all("=" in a for a in args):
-        return [tuple(a.split("=", 1)) for a in args]
-    if len(args) == 2:
-        return [(args[0], args[1])]
-    fail(f"no pude interpretar los argumentos: {args!r}")
+    bad = [a for a in args if "=" not in a]
+    if bad:
+        fail(f"cada argumento debe ser NOMBRE=valor; no entiendo: {' '.join(bad)}")
+    return [tuple(a.split("=", 1)) for a in args]
 
 
 def fail(message):
