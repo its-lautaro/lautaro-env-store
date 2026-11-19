@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+"""lautaro-env-store: guarda variables de entorno en ~/.lautaro-env y las deja listas para el shell.
+
+Formatos aceptados (todos equivalentes):
+  lautaro-env-store '[("user","valor"),("password","valor")]'   # varias
+  lautaro-env-store '("user","valor")'                           # una
+  lautaro-env-store "user","valor"                               # una (el shell pasa: user,valor)
+  lautaro-env-store user=valor password=valor                    # varias, estilo KEY=VALUE
+  lautaro-env-store user valor                                   # una, dos argumentos
+  lautaro-env-store --init                                       # solo crea el store y el source en el rc
+"""
+import ast
+import os
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+STORE = Path(os.environ.get("LAUTARO_ENV_FILE", Path.home() / ".lautaro-env"))
+RC_FILES = [Path.home() / ".zshrc", Path.home() / ".bashrc"]
+SOURCE_LINE = f'[ -f "{STORE}" ] && source "{STORE}"  # lautaro-env-store'
+NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def usage(code=1):
+    print(__doc__.strip(), file=sys.stderr)
+    sys.exit(code)
+
+
+def parse(args):
+    """Devuelve una lista de (nombre, valor) a partir de los argumentos de la línea de comandos."""
+    if not args:
+        usage()
+    joined = " ".join(args).strip()
+
+    # 1) Literal Python: [("a","1"),("b","2")]  |  ("a","1")  |  "a","1"
+    try:
+        value = ast.literal_eval(joined)
+    except (ValueError, SyntaxError):
+        value = None
+    if isinstance(value, (list, tuple)):
+        if len(value) == 2 and all(isinstance(x, str) for x in value):
+            return [(value[0], value[1])]
+        pairs = []
+        for item in value:
+            if not (isinstance(item, (list, tuple)) and len(item) == 2 and all(isinstance(x, str) for x in item)):
+                fail(f"no entiendo el par {item!r}; esperaba (\"nombre\", \"valor\")")
+            pairs.append((item[0], item[1]))
+        if pairs:
+            return pairs
+
+    # 2) KEY=VALUE KEY2=VALUE2
+    if all("=" in a for a in args):
+        return [tuple(a.split("=", 1)) for a in args]
+
+    # 3) dos argumentos sueltos: nombre valor
+    if len(args) == 2:
+        return [(args[0], args[1])]
+
+    # 4) un argumento "nombre,valor" (el shell ya le sacó las comillas)
+    if len(args) == 1 and "," in args[0]:
+        name, value = args[0].split(",", 1)
+        return [(name.strip().strip("'\""), value.strip().strip("'\""))]
+
+    fail(f"no pude interpretar los argumentos: {args!r}")
+
+
+def fail(message):
+    print(f"❌ {message}", file=sys.stderr)
+    usage()
+
+
+def shell_quote(value):
+    return "'" + value.replace("'", "'\"'\"'") + "'"
+
+
+def store(pairs):
+    STORE.touch(mode=0o600, exist_ok=True)
+    os.chmod(STORE, 0o600)
+    lines = STORE.read_text().splitlines()
+    names = {name for name, _ in pairs}
+    kept = [l for l in lines if not re.match(r"^export\s+(%s)=" % "|".join(map(re.escape, names)), l)]
+    kept += [f"export {name}={shell_quote(value)}" for name, value in pairs]
+    STORE.write_text("\n".join(kept) + "\n")
+
+
+def ensure_sourced():
+    """Agrega la línea de source al rc del shell que exista (zsh primero), una sola vez."""
+    for rc in RC_FILES:
+        if rc.exists():
+            content = rc.read_text()
+            if "lautaro-env-store" in content:
+                return rc, False
+            with rc.open("a") as f:
+                f.write(f"\n# lautaro-env-store: variables guardadas con `lautaro-env-store`\n{SOURCE_LINE}\n")
+            return rc, True
+    return None, False
+
+
+def copy_to_clipboard(text):
+    for cmd in (["pbcopy"], ["wl-copy"], ["xclip", "-selection", "clipboard"], ["xsel", "--clipboard", "--input"]):
+        if shutil.which(cmd[0]):
+            try:
+                subprocess.run(cmd, input=text.encode(), check=True)
+                return True
+            except (OSError, subprocess.CalledProcessError):
+                continue
+    return False
+
+
+def main():
+    args = sys.argv[1:]
+    if args and args[0] in ("-h", "--help"):
+        usage(0)
+    if args and args[0] == "--init":
+        STORE.touch(mode=0o600, exist_ok=True)
+        rc, added = ensure_sourced()
+        print(f"🧩 Store listo en {STORE}" + (f"; agregué el source a {rc}" if added else " (el shell ya lo cargaba)"))
+        return
+    pairs = parse(args)
+    for name, _ in pairs:
+        if not NAME_RE.match(name):
+            fail(f"'{name}' no es un nombre válido de variable de entorno")
+
+    store(pairs)
+    rc, added = ensure_sourced()
+    names = [name for name, _ in pairs]
+    copied = copy_to_clipboard(" ".join(names))
+
+    plural = "s" if len(names) > 1 else ""
+    print(f"🔐 Variable{plural} guardada{plural} en {STORE}:")
+    for name in names:
+        print(f"   ✅ {name}")
+    if copied:
+        print(f"📋 Nombre{plural} copiado{plural} al clipboard: {' '.join(names)}")
+    else:
+        print("⚠️  No encontré un comando de clipboard (pbcopy/xclip/wl-copy); los nombres quedan arriba.")
+    if added:
+        print(f"🧩 Agregué el source de {STORE} a {rc}")
+    print(f"🚀 Para usarla{plural} en esta terminal: source {STORE}  (las nuevas terminales ya las cargan solas)")
+
+
+if __name__ == "__main__":
+    main()
