@@ -1,31 +1,23 @@
-// lautaro-env-store guarda variables de entorno en ~/.lautaro-env y las deja listas para el shell.
 package main
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/its-lautaro/lautaro-env-store/internal/commands"
+	"github.com/its-lautaro/lautaro-env-store/internal/store"
 )
 
-var subcommands = map[string]func([]string){
-	"-h":       commands.Help,
-	"--help":   commands.Help,
-	"--list":   commands.List,
-	"ls":       commands.List,
-	"--remove": commands.Remove,
-	"rm":       commands.Remove,
-	"--clear":  commands.Clear,
-	"--init":   commands.Init,
-}
-
 func main() {
-	args := os.Args[1:]
-	if len(args) == 0 {
-		commands.Help(args)
+	home, err := os.UserHomeDir()
+	if err != nil {
+		commands.Fail(err)
 	}
-	if run, ok := subcommands[args[0]]; ok {
-		run(args[1:])
-		return
+	app := commands.App{
+		Store:   store.Store{Path: storePath(home)},
+		RCFiles: []string{filepath.Join(home, ".zshrc"), filepath.Join(home, ".bashrc")},
 	}
-	commands.Save(args)
+	if err := app.Run(os.Args[1:]); err != nil {
+		commands.Fail(err)
+	}
 }

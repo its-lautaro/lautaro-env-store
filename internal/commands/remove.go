@@ -1,33 +1,28 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/its-lautaro/lautaro-env-store/internal/color"
-	"github.com/its-lautaro/lautaro-env-store/internal/env"
 )
 
-// Remove borra las variables indicadas del store.
-func Remove(names []string) {
+func (a App) Remove(names []string) error {
 	if len(names) == 0 {
-		env.Fail("--remove necesita al menos un nombre")
+		return errors.New("--remove necesita al menos un nombre")
 	}
-	missing := env.Remove(names)
-	var removed []string
-	for _, n := range names {
-		if missing[n] {
-			continue
-		}
-		removed = append(removed, n)
+	removed, missing, err := a.Store.Delete(names)
+	if err != nil {
+		return err
+	}
+	for _, n := range removed {
 		fmt.Printf("🗑  %s %s\n", color.Cyan(n), color.Green("eliminada"))
 	}
-	for _, n := range names {
-		if missing[n] {
-			fmt.Printf("🤷 %s %s\n", color.Cyan(n), color.Yellow("no estaba guardada"))
-		}
+	for _, n := range missing {
+		fmt.Printf("🤷 %s %s\n", color.Cyan(n), color.Yellow("no estaba guardada"))
 	}
 	if len(removed) > 0 {
-		fmt.Printf("🚀 En esta terminal además: %s\n", color.Bold("unset "+strings.Join(removed, " ")))
+		fmt.Println("🚀 " + unsetHint(removed))
 	}
+	return nil
 }

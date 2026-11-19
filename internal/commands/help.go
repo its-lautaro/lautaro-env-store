@@ -1,8 +1,8 @@
 package commands
 
-import "github.com/its-lautaro/lautaro-env-store/internal/env"
+import "fmt"
 
-// Help imprime el uso y termina con código 0.
-func Help(args []string) {
-	env.Usage(0)
+func (a App) Help(args []string) error {
+	fmt.Println(a.helpText())
+	return nil
 }

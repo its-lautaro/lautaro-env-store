@@ -15,7 +15,7 @@ Requiere Go 1.22+ para instalarlo. Para copiar al clipboard usa `pbcopy` (macOS)
 ## Uso
 
 ```
-🔐 lautaro-env-store — guarda variables de entorno en ~/.lautaro-env y las deja listas para el shell
+🔐 lautaro-env-store — guarda variables de entorno en /Users/vos/.lautaro-env y las deja listas para el shell
 
 Uso:
   lautaro-env-store NOMBRE=valor [NOMBRE=valor ...]
@@ -24,12 +24,12 @@ Uso:
 Ejemplos:
   lautaro-env-store API_USER=usuario
   lautaro-env-store API_USER=usuario API_PASSWORD=secreto
-  lautaro-env-store API_USER="Un Usuario"              # espacios o símbolos: comillas del shell
+  lautaro-env-store API_USER="Un Usuario"  # espacios o símbolos: comillas del shell
 
 Comandos:
-  --list, ls                 Lista los nombres guardados y su fecha (nunca los valores)
+  --list, ls                 Lista los nombres guardados y su fecha (nunca los valores) y los copia al clipboard
   --remove, rm NOMBRE...     Borra esas variables
-  --clear [--yes]            Borra todas; pide confirmación salvo --yes
+  --clear [--yes]            Borra todas; pide confirmación salvo --yes o -y
   --init                     Crea el store y agrega el source al rc del shell
   --help, -h                 Muestra esta ayuda
 

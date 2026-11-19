@@ -4,16 +4,22 @@ import (
 	"fmt"
 
 	"github.com/its-lautaro/lautaro-env-store/internal/color"
-	"github.com/its-lautaro/lautaro-env-store/internal/env"
+	"github.com/its-lautaro/lautaro-env-store/internal/shell"
 )
 
-// Init crea el store vacío y agrega el source al rc del shell.
-func Init(args []string) {
-	env.EnsureStore()
-	rc, added := env.EnsureSourced()
-	if added {
-		fmt.Printf("🧩 Store listo en %s; agregué el source a %s\n", color.Dim(env.Store), color.Dim(rc))
-	} else {
-		fmt.Printf("🧩 Store listo en %s %s\n", color.Dim(env.Store), color.Dim("(el shell ya lo cargaba)"))
+func (a App) Init(args []string) error {
+	if err := a.Store.Create(); err != nil {
+		return err
 	}
+	rc, added, err := shell.EnsureSourced(a.RCFiles, a.Store.Path, Name)
+	if err != nil {
+		return err
+	}
+	if rc != "" && !added {
+		fmt.Printf("🧩 Store listo en %s %s\n", color.Dim(a.Store.Path), color.Dim("(el shell ya lo cargaba)"))
+		return nil
+	}
+	fmt.Printf("🧩 Store listo en %s\n", color.Dim(a.Store.Path))
+	a.reportSourced(rc, added)
+	return nil
 }

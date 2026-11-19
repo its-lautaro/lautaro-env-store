@@ -2,34 +2,30 @@ package commands
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/its-lautaro/lautaro-env-store/internal/color"
-	"github.com/its-lautaro/lautaro-env-store/internal/env"
+	"github.com/its-lautaro/lautaro-env-store/internal/shell"
 )
 
-// Save es el comando por defecto: guarda NOMBRE=valor y copia los nombres al clipboard.
-func Save(args []string) {
-	pairs := env.Parse(args)
-	for _, p := range pairs {
-		if !env.NameRE.MatchString(p.Name) {
-			env.Fail("'%s' no es un nombre válido de variable de entorno", p.Name)
-		}
+func (a App) Save(args []string) error {
+	vars, err := parse(args)
+	if err != nil {
+		return err
 	}
-
-	replaced := env.Save(pairs)
-	rc, added := env.EnsureSourced()
-	names := make([]string, 0, len(pairs))
-	for _, p := range pairs {
-		names = append(names, p.Name)
+	replaced, err := a.Store.Put(vars)
+	if err != nil {
+		return err
 	}
-	copied := env.CopyToClipboard(strings.Join(names, " "))
-
-	plural := ""
-	if len(names) > 1 {
-		plural = "s"
+	rc, added, err := shell.EnsureSourced(a.RCFiles, a.Store.Path, Name)
+	if err != nil {
+		return err
 	}
-	fmt.Printf("🔐 Variable%s guardada%s:\n", plural, plural)
+	names := make([]string, len(vars))
+	for i, v := range vars {
+		names[i] = v.Name
+	}
+	p := plural(len(names))
+	fmt.Printf("🔐 Variable%s guardada%s:\n", p, p)
 	for _, name := range names {
 		if replaced[name] {
 			fmt.Printf("   ♻️  %s %s\n", color.Cyan(name), color.Yellow("(reemplazada)"))
@@ -37,12 +33,7 @@ func Save(args []string) {
 			fmt.Printf("   %s %s\n", color.Green("✅"), color.Cyan(name))
 		}
 	}
-	if copied {
-		fmt.Printf("📋 Nombre%s copiado%s al clipboard\n", plural, plural)
-	} else {
-		fmt.Println(color.Yellow("⚠️  No encontré un comando de clipboard (pbcopy/xclip/wl-copy); los nombres quedan arriba."))
-	}
-	if added {
-		fmt.Printf("🧩 Agregué el source de %s a %s\n", color.Dim(env.Store), color.Dim(rc))
-	}
+	reportClipboard(names)
+	a.reportSourced(rc, added)
+	return nil
 }
