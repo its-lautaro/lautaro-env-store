@@ -4,9 +4,6 @@ import "strings"
 
 // Parse convierte argumentos NOMBRE=valor en pares; falla si alguno no tiene '='.
 func Parse(args []string) []Pair {
-	if len(args) == 0 {
-		Usage(1)
-	}
 	var bad []string
 	for _, a := range args {
 		if !strings.Contains(a, "=") {

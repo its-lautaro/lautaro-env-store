@@ -20,11 +20,12 @@ var subcommands = map[string]func([]string){
 
 func main() {
 	args := os.Args[1:]
-	if len(args) > 0 {
-		if run, ok := subcommands[args[0]]; ok {
-			run(args[1:])
-			return
-		}
+	if len(args) == 0 {
+		commands.Help(args)
+	}
+	if run, ok := subcommands[args[0]]; ok {
+		run(args[1:])
+		return
 	}
 	commands.Save(args)
 }
