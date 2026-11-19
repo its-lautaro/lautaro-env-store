@@ -8,8 +8,14 @@ Formatos aceptados (todos equivalentes):
   lautaro-env-store user=valor password=valor                    # varias, estilo KEY=VALUE
   lautaro-env-store user valor                                   # una, dos argumentos
   lautaro-env-store --init                                       # solo crea el store y el source en el rc
+
+Mantenimiento:
+  lautaro-env-store --list                     # nombres guardados y fecha (nunca los valores)
+  lautaro-env-store --remove user password     # borra esas variables
+  lautaro-env-store --clear [--yes]            # borra todas
 """
 import ast
+import datetime as dt
 import os
 import re
 import shutil
@@ -21,6 +27,8 @@ STORE = Path(os.environ.get("LAUTARO_ENV_FILE", Path.home() / ".lautaro-env"))
 RC_FILES = [Path.home() / ".zshrc", Path.home() / ".bashrc"]
 SOURCE_LINE = f'[ -f "{STORE}" ] && source "{STORE}"  # lautaro-env-store'
 NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+ENTRY_RE = re.compile(r"^export\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)=")
+SAVED_RE = re.compile(r"# saved (\d{4}-\d{2}-\d{2} \d{2}:\d{2})$")
 
 
 def usage(code=1):
@@ -75,14 +83,82 @@ def shell_quote(value):
     return "'" + value.replace("'", "'\"'\"'") + "'"
 
 
-def store(pairs):
+def read_entries():
+    """Lista de (nombre, fecha) en el orden del archivo; la fecha puede ser None en entradas viejas."""
+    if not STORE.exists():
+        return []
+    entries = []
+    for line in STORE.read_text().splitlines():
+        m = ENTRY_RE.match(line)
+        if m:
+            saved = SAVED_RE.search(line)
+            entries.append((m.group("name"), saved.group(1) if saved else None))
+    return entries
+
+
+def write_lines(lines):
     STORE.touch(mode=0o600, exist_ok=True)
     os.chmod(STORE, 0o600)
-    lines = STORE.read_text().splitlines()
+    STORE.write_text("\n".join(lines) + ("\n" if lines else ""))
+
+
+def store(pairs):
+    """Guarda los pares y devuelve los nombres que ya existían (se reemplazaron)."""
+    existing = {name for name, _ in read_entries()}
     names = {name for name, _ in pairs}
-    kept = [l for l in lines if not re.match(r"^export\s+(%s)=" % "|".join(map(re.escape, names)), l)]
-    kept += [f"export {name}={shell_quote(value)}" for name, value in pairs]
-    STORE.write_text("\n".join(kept) + "\n")
+    lines = STORE.read_text().splitlines() if STORE.exists() else []
+    kept = [l for l in lines if not (ENTRY_RE.match(l) and ENTRY_RE.match(l).group("name") in names)]
+    stamp = dt.datetime.now().strftime("%Y-%m-%d %H:%M")
+    kept += [f"export {name}={shell_quote(value)}  # saved {stamp}" for name, value in pairs]
+    write_lines(kept)
+    return names & existing
+
+
+def remove(names):
+    """Borra las variables indicadas; devuelve las que no existían."""
+    lines = STORE.read_text().splitlines() if STORE.exists() else []
+    present = {name for name, _ in read_entries()}
+    kept = [l for l in lines if not (ENTRY_RE.match(l) and ENTRY_RE.match(l).group("name") in names)]
+    write_lines(kept)
+    return set(names) - present
+
+
+def cmd_list():
+    entries = read_entries()
+    if not entries:
+        print(f"📭 No hay variables guardadas en {STORE}")
+        return
+    print(f"🗂  {len(entries)} variable{'s' if len(entries) > 1 else ''} en {STORE}:")
+    for name, date in entries:
+        print(f"   🔑 {name}" + (f"  (guardada {date})" if date else ""))
+    copy_to_clipboard(" ".join(name for name, _ in entries))
+
+
+def cmd_remove(names):
+    if not names:
+        fail("--remove necesita al menos un nombre")
+    missing = remove(names)
+    removed = [n for n in names if n not in missing]
+    for n in removed:
+        print(f"🗑  {n} eliminada")
+    for n in missing:
+        print(f"🤷 {n} no estaba guardada")
+    if removed:
+        print(f"🚀 En esta terminal además: unset {' '.join(removed)}")
+
+
+def cmd_clear(args):
+    entries = read_entries()
+    if not entries:
+        print("📭 No había nada que borrar")
+        return
+    if "--yes" not in args and "-y" not in args:
+        answer = input(f"⚠️  Vas a borrar {len(entries)} variable(s) de {STORE}. ¿Seguro? [y/N] ").strip().lower()
+        if answer not in ("y", "yes", "s", "si", "sí"):
+            print("👌 Cancelado")
+            return
+    write_lines([])
+    print(f"🧹 Store vacío. En esta terminal además: unset {' '.join(n for n, _ in entries)}")
 
 
 def ensure_sourced():
@@ -113,6 +189,15 @@ def main():
     args = sys.argv[1:]
     if args and args[0] in ("-h", "--help"):
         usage(0)
+    if args and args[0] in ("--list", "ls"):
+        cmd_list()
+        return
+    if args and args[0] in ("--remove", "rm"):
+        cmd_remove(args[1:])
+        return
+    if args and args[0] == "--clear":
+        cmd_clear(args[1:])
+        return
     if args and args[0] == "--init":
         STORE.touch(mode=0o600, exist_ok=True)
         rc, added = ensure_sourced()
@@ -123,7 +208,7 @@ def main():
         if not NAME_RE.match(name):
             fail(f"'{name}' no es un nombre válido de variable de entorno")
 
-    store(pairs)
+    replaced = store(pairs)
     rc, added = ensure_sourced()
     names = [name for name, _ in pairs]
     copied = copy_to_clipboard(" ".join(names))
@@ -131,7 +216,7 @@ def main():
     plural = "s" if len(names) > 1 else ""
     print(f"🔐 Variable{plural} guardada{plural} en {STORE}:")
     for name in names:
-        print(f"   ✅ {name}")
+        print(f"   {'♻️  ' + name + ' (reemplazada)' if name in replaced else '✅ ' + name}")
     if copied:
         print(f"📋 Nombre{plural} copiado{plural} al clipboard: {' '.join(names)}")
     else:

@@ -54,7 +54,17 @@ Salida:
 🚀 Para usarlas en esta terminal: source /Users/vos/.lautaro-env  (las nuevas terminales ya las cargan solas)
 ```
 
-Si la variable ya existía, se reemplaza su valor. Los valores nunca se imprimen ni se copian al clipboard, solo los nombres.
+Si la variable ya existía, se reemplaza su valor y la salida lo marca con ♻️. Los valores nunca se imprimen ni se copian al clipboard, solo los nombres.
+
+## Mantenimiento
+
+```bash
+lautaro-env-store --list                  # nombres y fecha de guardado (alias: ls)
+lautaro-env-store --remove API_USER API_PASSWORD   # borra esas variables (alias: rm)
+lautaro-env-store --clear                 # borra todas, pide confirmación (--yes para saltearla)
+```
+
+Borrar del store no afecta la terminal ya abierta: la salida te deja el `unset` listo para pegar.
 
 El instalador corre `lautaro-env-store --init`, que crea el store vacío y agrega el `source` al rc del shell, así cualquier terminal (o herramienta que cargue tu `~/.zshrc`) ya ve las variables apenas las guardás.
 
