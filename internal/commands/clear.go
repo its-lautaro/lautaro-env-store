@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/its-lautaro/lautaro-env-store/internal/color"
 	"github.com/its-lautaro/lautaro-env-store/internal/env"
 )
 
@@ -17,7 +18,7 @@ func Clear(args []string) {
 		return
 	}
 	if !hasFlag(args, "--yes") && !hasFlag(args, "-y") {
-		fmt.Printf("⚠️  Vas a borrar %d variable(s) de %s. ¿Seguro? [y/N] ", len(entries), env.Store)
+		fmt.Print(color.Yellow(fmt.Sprintf("⚠️  Vas a borrar %d variable(s) de %s. ¿Seguro? [y/N] ", len(entries), env.Store)))
 		answer, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 		switch strings.ToLower(strings.TrimSpace(answer)) {
 		case "y", "yes", "s", "si", "sí":
@@ -31,5 +32,5 @@ func Clear(args []string) {
 	for _, e := range entries {
 		names = append(names, e.Name)
 	}
-	fmt.Printf("🧹 Store vacío. En esta terminal además: unset %s\n", strings.Join(names, " "))
+	fmt.Printf("🧹 Store vacío. En esta terminal además: %s\n", color.Bold("unset "+strings.Join(names, " ")))
 }

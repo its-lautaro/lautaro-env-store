@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 
+	"github.com/its-lautaro/lautaro-env-store/internal/color"
 	"github.com/its-lautaro/lautaro-env-store/internal/env"
 )
 
@@ -11,8 +12,8 @@ func Init(args []string) {
 	env.EnsureStore()
 	rc, added := env.EnsureSourced()
 	if added {
-		fmt.Printf("🧩 Store listo en %s; agregué el source a %s\n", env.Store, rc)
+		fmt.Printf("🧩 Store listo en %s; agregué el source a %s\n", color.Dim(env.Store), color.Dim(rc))
 	} else {
-		fmt.Printf("🧩 Store listo en %s (el shell ya lo cargaba)\n", env.Store)
+		fmt.Printf("🧩 Store listo en %s %s\n", color.Dim(env.Store), color.Dim("(el shell ya lo cargaba)"))
 	}
 }

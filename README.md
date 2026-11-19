@@ -6,85 +6,43 @@ El archivo `~/.lautaro-env` se crea con permisos `600` y se agrega una línea `s
 
 ## Instalación
 
-Con `curl`:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/its-lautaro/lautaro-env-store/main/install.sh | bash
-```
-
-O clonando:
-
-```bash
-git clone https://github.com/its-lautaro/lautaro-env-store.git
-cd lautaro-env-store && ./install.sh
-```
-
-O directamente con Go:
-
 ```bash
 GOBIN="$HOME/.local/bin" go install github.com/its-lautaro/lautaro-env-store@latest && lautaro-env-store --init
 ```
 
-El binario queda en `~/.local/bin`. Si esa carpeta no está en tu `PATH`, agregá a tu `~/.zshrc`:
+Si `~/.local/bin` no está en tu `PATH`, agregá a tu `~/.zshrc`:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-Requiere Go 1.22+ para compilar y `pbcopy` (macOS) o `xclip` / `xsel` / `wl-copy` (Linux) para el clipboard.
+Requiere Go 1.22+ para instalarlo. Para copiar al clipboard usa `pbcopy` (macOS) o `xclip` / `xsel` / `wl-copy` (Linux); sin ellos igual funciona, solo avisa que no copió.
 
 ## Uso
 
-Cada argumento es `NOMBRE=valor`, una o varias:
-
-```bash
-lautaro-env-store API_USER=usuario
-lautaro-env-store API_USER=usuario API_PASSWORD=secreto
 ```
+🔐 lautaro-env-store — guarda variables de entorno en ~/.lautaro-env y las deja listas para el shell
 
-Si el valor tiene espacios o caracteres especiales, usá las comillas del shell. Se guardan sin las comillas:
+Uso:
+  lautaro-env-store NOMBRE=valor [NOMBRE=valor ...]
+  lautaro-env-store <comando> [args]
 
-```bash
-lautaro-env-store API_USER="Un Usuario"
-echo "$API_USER"   # Un Usuario
-```
+Ejemplos:
+  lautaro-env-store API_USER=usuario
+  lautaro-env-store API_USER=usuario API_PASSWORD=secreto
+  lautaro-env-store API_USER="Un Usuario"              # espacios o símbolos: comillas del shell
 
-Salida:
+Comandos:
+  --list, ls                 Lista los nombres guardados y su fecha (nunca los valores)
+  --remove, rm NOMBRE...     Borra esas variables
+  --clear [--yes]            Borra todas; pide confirmación salvo --yes
+  --init                     Crea el store y agrega el source al rc del shell
+  --help, -h                 Muestra esta ayuda
 
-```
-🔐 Variables guardadas:
-   ✅ API_USER
-   ✅ API_PASSWORD
-📋 Nombres copiados al clipboard
-```
-
-Si la variable ya existía, se reemplaza su valor y la salida lo marca con ♻️. Los valores nunca se imprimen ni se copian al clipboard, solo los nombres.
-
-## Mantenimiento
-
-```bash
-lautaro-env-store --list                  # nombres y fecha de guardado (alias: ls)
-lautaro-env-store --remove API_USER API_PASSWORD   # borra esas variables (alias: rm)
-lautaro-env-store --clear                 # borra todas, pide confirmación (--yes para saltearla)
-```
-
-Borrar del store no afecta la terminal ya abierta: la salida te deja el `unset` listo para pegar.
-
-El instalador corre `lautaro-env-store --init`, que crea el store vacío y agrega el `source` al rc del shell, así cualquier terminal (o herramienta que cargue tu `~/.zshrc`) ya ve las variables apenas las guardás.
-
-Para usar otro archivo: `LAUTARO_ENV_FILE=/ruta/otro.env lautaro-env-store ...`.
-
-## Estructura
-
-```
-main.go                      # despacha al comando según el primer argumento
-internal/commands/           # un archivo por comando: save, list, remove, clear, init
-internal/env/                # una función por archivo: config, parse, save, remove,
-                             # read_entries, write_lines, ensure_sourced, copy_to_clipboard, ...
-```
-
-```bash
-go build -o lautaro-env-store .
+Notas:
+  Los nombres de las variables guardadas se copian al clipboard; los valores nunca se imprimen.
+  El store se crea con permisos 600 y ~/.zshrc (o ~/.bashrc) lo carga en cada terminal nueva.
+  LAUTARO_ENV_FILE cambia la ruta del store.
 ```
 
 ## Licencia

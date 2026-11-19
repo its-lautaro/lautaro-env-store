@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/its-lautaro/lautaro-env-store/internal/color"
 	"github.com/its-lautaro/lautaro-env-store/internal/env"
 )
 
@@ -19,14 +20,14 @@ func Remove(names []string) {
 			continue
 		}
 		removed = append(removed, n)
-		fmt.Printf("🗑  %s eliminada\n", n)
+		fmt.Printf("🗑  %s %s\n", color.Cyan(n), color.Green("eliminada"))
 	}
 	for _, n := range names {
 		if missing[n] {
-			fmt.Printf("🤷 %s no estaba guardada\n", n)
+			fmt.Printf("🤷 %s %s\n", color.Cyan(n), color.Yellow("no estaba guardada"))
 		}
 	}
 	if len(removed) > 0 {
-		fmt.Printf("🚀 En esta terminal además: unset %s\n", strings.Join(removed, " "))
+		fmt.Printf("🚀 En esta terminal además: %s\n", color.Bold("unset "+strings.Join(removed, " ")))
 	}
 }

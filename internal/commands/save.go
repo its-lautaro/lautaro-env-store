@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/its-lautaro/lautaro-env-store/internal/color"
 	"github.com/its-lautaro/lautaro-env-store/internal/env"
 )
 
@@ -31,17 +32,17 @@ func Save(args []string) {
 	fmt.Printf("🔐 Variable%s guardada%s:\n", plural, plural)
 	for _, name := range names {
 		if replaced[name] {
-			fmt.Printf("   ♻️  %s (reemplazada)\n", name)
+			fmt.Printf("   ♻️  %s %s\n", color.Cyan(name), color.Yellow("(reemplazada)"))
 		} else {
-			fmt.Printf("   ✅ %s\n", name)
+			fmt.Printf("   %s %s\n", color.Green("✅"), color.Cyan(name))
 		}
 	}
 	if copied {
 		fmt.Printf("📋 Nombre%s copiado%s al clipboard\n", plural, plural)
 	} else {
-		fmt.Println("⚠️  No encontré un comando de clipboard (pbcopy/xclip/wl-copy); los nombres quedan arriba.")
+		fmt.Println(color.Yellow("⚠️  No encontré un comando de clipboard (pbcopy/xclip/wl-copy); los nombres quedan arriba."))
 	}
 	if added {
-		fmt.Printf("🧩 Agregué el source de %s a %s\n", env.Store, rc)
+		fmt.Printf("🧩 Agregué el source de %s a %s\n", color.Dim(env.Store), color.Dim(rc))
 	}
 }
