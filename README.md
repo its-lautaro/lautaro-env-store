@@ -7,13 +7,13 @@ El archivo `~/.lautaro-env` se crea con permisos `600` y se agrega una línea `s
 ## Instalación
 
 ```bash
-GOBIN="$HOME/.local/bin" go install github.com/its-lautaro/lautaro-env-store@latest && lautaro-env-store --init
+go install github.com/its-lautaro/lautaro-env-store@latest && lautaro-env-store --init
 ```
 
-Si `~/.local/bin` no está en tu `PATH`, agregá a tu `~/.zshrc`:
+El binario queda en `$(go env GOPATH)/bin` (normalmente `~/go/bin`). Si esa carpeta no está en tu `PATH`, agregá a tu `~/.zshrc`:
 
 ```bash
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="$(go env GOPATH)/bin:$PATH"
 ```
 
 Requiere Go 1.22+ para instalarlo. Para copiar al clipboard usa `pbcopy` (macOS) o `xclip` / `xsel` / `wl-copy` (Linux); sin ellos igual funciona, solo avisa que no copió.
