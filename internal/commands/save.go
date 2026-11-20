@@ -25,15 +25,15 @@ func (a App) Save(args []string) error {
 		names[i] = v.Name
 	}
 	p := plural(len(names))
-	fmt.Printf("🔐 Variable%s guardada%s:\n", p, p)
+	fmt.Fprintf(a.Out, "🔐 Variable%s guardada%s:\n", p, p)
 	for _, name := range names {
 		if replaced[name] {
-			fmt.Printf("   ♻️  %s %s\n", color.Cyan(name), color.Yellow("(reemplazada)"))
+			fmt.Fprintf(a.Out, "   ♻️  %s %s\n", color.Cyan(name), color.Yellow("(reemplazada)"))
 		} else {
-			fmt.Printf("   %s %s\n", color.Green("✅"), color.Cyan(name))
+			fmt.Fprintf(a.Out, "   %s %s\n", color.Green("✅"), color.Cyan(name))
 		}
 	}
-	reportClipboard(names)
+	a.reportClipboard(names)
 	a.reportSourced(rc, added)
 	return nil
 }

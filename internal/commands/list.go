@@ -12,19 +12,19 @@ func (a App) List(args []string) error {
 		return err
 	}
 	if len(entries) == 0 {
-		fmt.Printf("📭 No hay variables guardadas en %s\n", color.Dim(a.Store.Path))
+		fmt.Fprintf(a.Out, "📭 No hay variables guardadas en %s\n", color.Dim(a.Store.Path))
 		return nil
 	}
-	fmt.Printf("🗂  %d variable%s en %s:\n", len(entries), plural(len(entries)), color.Dim(a.Store.Path))
+	fmt.Fprintf(a.Out, "🗂  %d variable%s en %s:\n", len(entries), plural(len(entries)), color.Dim(a.Store.Path))
 	names := make([]string, len(entries))
 	for i, e := range entries {
 		names[i] = e.Name
 		if e.Saved != "" {
-			fmt.Printf("   🔑 %s  %s\n", color.Cyan(e.Name), color.Dim("(guardada "+e.Saved+")"))
+			fmt.Fprintf(a.Out, "   🔑 %s  %s\n", color.Cyan(e.Name), color.Dim("(guardada "+e.Saved+")"))
 		} else {
-			fmt.Printf("   🔑 %s\n", color.Cyan(e.Name))
+			fmt.Fprintf(a.Out, "   🔑 %s\n", color.Cyan(e.Name))
 		}
 	}
-	reportClipboard(names)
+	a.reportClipboard(names)
 	return nil
 }

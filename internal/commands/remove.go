@@ -12,13 +12,13 @@ func (a App) Remove(names []string) error {
 		return err
 	}
 	for _, n := range removed {
-		fmt.Printf("🗑  %s %s\n", color.Cyan(n), color.Green("eliminada"))
+		fmt.Fprintf(a.Out, "🗑  %s %s\n", color.Cyan(n), color.Green("eliminada"))
 	}
 	for _, n := range missing {
-		fmt.Printf("🤷 %s %s\n", color.Cyan(n), color.Yellow("no estaba guardada"))
+		fmt.Fprintf(a.Out, "🤷 %s %s\n", color.Cyan(n), color.Yellow("no estaba guardada"))
 	}
 	if len(removed) > 0 {
-		fmt.Println("🚀 " + unsetHint(removed))
+		fmt.Fprintln(a.Out, "🚀 "+unsetHint(removed))
 	}
 	return nil
 }

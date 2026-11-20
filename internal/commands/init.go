@@ -16,10 +16,10 @@ func (a App) Init(args []string) error {
 		return err
 	}
 	if rc != "" && !added {
-		fmt.Printf("🧩 Store listo en %s %s\n", color.Dim(a.Store.Path), color.Dim("(el shell ya lo cargaba)"))
+		fmt.Fprintf(a.Out, "🧩 Store listo en %s %s\n", color.Dim(a.Store.Path), color.Dim("(el shell ya lo cargaba)"))
 		return nil
 	}
-	fmt.Printf("🧩 Store listo en %s\n", color.Dim(a.Store.Path))
+	fmt.Fprintf(a.Out, "🧩 Store listo en %s\n", color.Dim(a.Store.Path))
 	a.reportSourced(rc, added)
 	return nil
 }

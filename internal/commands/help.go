@@ -3,6 +3,6 @@ package commands
 import "fmt"
 
 func (a App) Help(args []string) error {
-	fmt.Println(a.helpText())
+	fmt.Fprintln(a.Out, a.helpText())
 	return nil
 }
