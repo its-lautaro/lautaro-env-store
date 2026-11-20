@@ -103,3 +103,62 @@ func TestStore_Put_SourcedByShell(t *testing.T) {
 		t.Errorf("valores tras source = %q, want [%q %q]", got, want["USER_X"], want["PASS_X"])
 	}
 }
+
+// sourceStore carga el store con shell y devuelve el valor de name; falla si el source da error.
+func sourceStore(t *testing.T, shell string, s Store, name string) string {
+	t.Helper()
+	path, err := exec.LookPath(shell)
+	if err != nil {
+		t.Skipf("%s no disponible", shell)
+	}
+	cmd := exec.Command(path, "-c", `. "$1" && printf '%s' "${`+name+`-<unset>}"`, shell, s.Path)
+	cmd.Env = []string{"PATH=" + os.Getenv("PATH")}
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("source del store con %s falló: %v\n%s\nstore:\n%s", shell, err, out, readFile(t, s.Path))
+	}
+	return string(out)
+}
+
+// Regresión: un valor multilínea ocupaba varias líneas del store; al reemplazarlo o borrarlo quedaba
+// una línea huérfana con una comilla sin cerrar y el source del rc fallaba en cada terminal nueva.
+func TestStore_Put_MultilineValueStaysOnOneLine(t *testing.T) {
+	t.Parallel()
+	for _, shell := range []string{"bash", "zsh"} {
+		t.Run(shell, func(t *testing.T) {
+			t.Parallel()
+			s := newTestStore(t)
+			const multiline = "-----BEGIN KEY-----\nit's\n-----END KEY-----\n"
+
+			if _, err := s.Put([]Var{{Name: "KEY", Value: multiline}, {Name: "OTHER", Value: "x"}}); err != nil {
+				t.Fatalf("Put() error = %v", err)
+			}
+			if n := strings.Count(readFile(t, s.Path), "\n"); n != 2 {
+				t.Errorf("el store tiene %d líneas, want 2 (una por variable)", n)
+			}
+			if got := sourceStore(t, shell, s, "KEY"); got != multiline {
+				t.Errorf("KEY tras source = %q, want %q", got, multiline)
+			}
+
+			if _, err := s.Put([]Var{{Name: "KEY", Value: "nuevo"}}); err != nil {
+				t.Fatalf("Put() reemplazo error = %v", err)
+			}
+			if got := sourceStore(t, shell, s, "KEY"); got != "nuevo" {
+				t.Errorf("KEY tras reemplazo = %q, want %q", got, "nuevo")
+			}
+
+			if _, err := s.Put([]Var{{Name: "KEY", Value: multiline}}); err != nil {
+				t.Fatal(err)
+			}
+			if _, _, err := s.Delete([]string{"KEY"}); err != nil {
+				t.Fatalf("Delete() error = %v", err)
+			}
+			if got := sourceStore(t, shell, s, "KEY"); got != "<unset>" {
+				t.Errorf("KEY tras Delete = %q, want <unset>", got)
+			}
+			if got := sourceStore(t, shell, s, "OTHER"); got != "x" {
+				t.Errorf("OTHER = %q, want x", got)
+			}
+		})
+	}
+}

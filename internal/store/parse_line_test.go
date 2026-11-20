@@ -28,6 +28,18 @@ func TestParseLine(t *testing.T) {
 			want:   Entry{Name: "FOO"},
 			wantOK: true,
 		},
+		{
+			name:   "value containing the saved marker",
+			line:   "export FOO='x # saved bogus'  # saved 2026-01-02 03:04",
+			want:   Entry{Name: "FOO", Saved: "2026-01-02 03:04"},
+			wantOK: true,
+		},
+		{
+			name:   "value with marker and no stamp keeps last marker",
+			line:   "export FOO='x # saved bogus'",
+			want:   Entry{Name: "FOO", Saved: "bogus'"},
+			wantOK: true,
+		},
 		{name: "comment", line: "# export FOO=bar"},
 		{name: "blank", line: ""},
 		{name: "assignment without export", line: "FOO=bar"},

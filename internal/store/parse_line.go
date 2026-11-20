@@ -4,7 +4,9 @@ import "regexp"
 
 var (
 	entryRE = regexp.MustCompile(`^export\s+(` + namePattern + `)=`)
-	savedRE = regexp.MustCompile(regexp.QuoteMeta(savedMarker) + `(.+)$`)
+	// El `.*` greedy hace que gane la última marca: la que agrega formatLine va siempre al final,
+	// y el valor puede contener el texto de la marca.
+	savedRE = regexp.MustCompile(`^.*` + regexp.QuoteMeta(savedMarker) + `(.+)$`)
 )
 
 func parseLine(line string) (Entry, bool) {
